@@ -323,13 +323,31 @@ RCT_EXPORT_METHOD(getCurrentTime:(double)key callback:(RCTResponseSenderBlock)ca
 
 - (void)setSpeakerPhone:(double)key isSpeaker:(BOOL)isSpeaker {
     AVAudioSession *session = [AVAudioSession sharedInstance];
-    
-    if (isSpeaker) {
+
+    NSError *error = nil;
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord
+                                     withOptions:AVAudioSessionCategoryOptionAllowBluetooth
+                                           error:&error];
+
+    // 判断当前输出设备是否为耳机/蓝牙
+    BOOL hasHeadphones = NO;
+    AVAudioSessionRouteDescription *route = [session currentRoute];
+    for (AVAudioSessionPortDescription *output in route.outputs) {
+        if ([output.portType isEqualToString:AVAudioSessionPortHeadphones] ||
+            [output.portType isEqualToString:AVAudioSessionPortBluetoothA2DP] ||
+            [output.portType isEqualToString:AVAudioSessionPortBluetoothLE] ||
+            [output.portType isEqualToString:AVAudioSessionPortBluetoothHFP]) {
+            hasHeadphones = YES;
+            break;
+        }
+    }
+
+    if (isSpeaker && !hasHeadphones) {
         [session overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
     } else {
         [session overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
     }
-    
+
     [session setActive:YES error:nil];
 }
 
