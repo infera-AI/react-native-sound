@@ -216,7 +216,14 @@ RCT_EXPORT_METHOD(prepare:(NSString *)fileName key:(double)key options:(JS::Nati
 }
 
 RCT_EXPORT_METHOD(play:(double)key callback:(RCTResponseSenderBlock)callback) {
-    [[AVAudioSession sharedInstance] setActive:YES error:nil];
+    // [[AVAudioSession sharedInstance] setActive:YES error:nil];
+    // 新增：强制设置为 Playback 类别，忽略静音/专注模式
+    AVAudioSession *session = [AVAudioSession sharedInstance];
+    [session setCategory:AVAudioSessionCategoryPlayback 
+             withOptions:AVAudioSessionCategoryOptionMixWithOthers | AVAudioSessionCategoryOptionAllowBluetooth
+                   error:nil];
+    // 原有激活逻辑
+    [session setActive:YES error:nil];
     
     [[NSNotificationCenter defaultCenter]
      addObserver:self
